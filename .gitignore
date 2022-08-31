@@ -1,0 +1,13 @@
+# Node Files
+node_modules
+package-lock.json
+
+# Enviroment Variables
+.env
+.env.*
+
+# MacOS files
+.DS_Store
+
+# Yarn files
+yarn-error.log
