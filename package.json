@@ -1,6 +1,21 @@
 {
+  "name": "faithchatt-v14",
+  "description": "FaithChatt Utilities Bot v2",
+  "version": "2.0.0-rc.1",
+  "main": "index.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/faithchatt/faithchatt.git"
+  },
+  "author": "faithchatt",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/faithchatt/faithchatt/issues"
+  },
+  "homepage": "https://github.com/faithchatt/faithchatt#readme",
   "dependencies": {
-    "discord.js": "^14.3.0",
+    "discord.js": "^14.5.0",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
     "fs": "^0.0.1-security",
@@ -9,6 +24,6 @@
     "prettier": "^2.7.1"
   },
   "scripts": {
-	"start": "node index.js"
+    "start": "node index.js"
   }
 }

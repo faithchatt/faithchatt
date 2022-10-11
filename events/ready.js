@@ -18,7 +18,7 @@ async function loadCommands(client) {
 		console.log('Started refreshing application (/) commands.');
 	
 		await rest.put(
-			Routes.applicationGuildCommands(config.clientId, config.guildId),
+			Routes.applicationGuildCommands(client.user.id, config.guildId),
 			{ body: client.commandsArray },
 		);
 		

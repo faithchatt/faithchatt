@@ -6,7 +6,8 @@ const fetchFiles = require('./fetchFiles.js');
 
 client.commandsArray = [];
 client.commands = new Collection();
-// client.events = new Collection();
+client.buttons = new Collection();
+client.modals = new Collection();
 
 // Commands
 const commandsPath = path.join(__dirname, '..', 'commands');
@@ -35,7 +36,35 @@ for (const file of eventFiles) {
 
 		if (event.once) client.once(event.name, (...args) => event.execute(...args));
 		else client.on(event.name, (...args) => event.execute(...args));
-		// client.events.set(event.name, event)
+	} catch (e) {
+		console.error(e);
+	}
+}
+
+// Interaction Components (Buttons and Modals)
+const buttonsPath = path.join(__dirname, '..', 'interactions', 'buttons');
+const buttonFiles = fetchFiles(buttonsPath, ['.js'], new RegExp('^-'));
+
+for (const file of buttonFiles) {
+	try {
+		const filePath = path.join(buttonsPath, file);
+		const button = require(filePath);
+
+		client.buttons.set(button.data.name, button)
+	} catch (e) {
+		console.error(e);
+	}
+}
+
+const modalsPath = path.join(__dirname, '..', 'interactions', 'modalResponses');
+const modalFiles = fetchFiles(modalsPath, ['.js'], new RegExp('^-'));
+
+for (const file of modalFiles) {
+	try {
+		const filePath = path.join(modalsPath, file);
+		const modal = require(filePath);
+
+		client.modals.set(modal.data.name, modal)
 	} catch (e) {
 		console.error(e);
 	}

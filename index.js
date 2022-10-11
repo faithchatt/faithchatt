@@ -7,5 +7,6 @@ const client = new Client({ intents: intentsLoad, partials: partialsLoad });
 module.exports.client = client;
 require('dotenv').config();
 require('./utils/handler.js');
+require('./utils/mongo')();
 
 client.login(process.env.TOKEN);
