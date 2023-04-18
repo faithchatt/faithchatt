@@ -1,6 +1,6 @@
 const { EmbedBuilder, SlashCommandBuilder, PermissionsBitField, ChannelType } = require('discord.js');
 const { textId, parentId, rolesId } = require('../../utils/variables')
-const schema = require('../../utils/variables')
+const schema = require('../../model/jailsystem.js')
 const perm = PermissionsBitField.Flags
 
 module.exports = {
@@ -12,12 +12,12 @@ module.exports = {
 	async execute(interaction) {
         const member = await interaction.options.get('user').member
         const reason = await interaction.options.get('reason').value
-		if(!interaction.member.permissions.has(permflag.BanMembers || permflag.KickMembers)) return interaction.reply({
+		if(!interaction.member.permissions.has(perm.BanMembers || perm.KickMembers)) return interaction.reply({
             embeds: [new EmbedBuilder()
             .setDescription("❌ | You are not a staff member authorized to use this command.")
             .setColor("#ff0000")],
             ephemeral: true
-        }) 
+        })
 
         const memberrole = interaction.guild.roles.cache.get(rolesId.member)
         const regularrole = interaction.guild.roles.cache.get(rolesId.regular)
@@ -39,7 +39,6 @@ module.exports = {
         const modlog = interaction.guild.channels.cache.get(textId.modLog)
 
         const moderatorrole = interaction.guild.roles.cache.get(rolesId.moderator)
-        const modcheck = interaction.member.roles.cache.has(rolesId.moderator)
 		
         let data = await schema.findOne({ userId: member.user.id })
         if(!data) {
@@ -59,7 +58,8 @@ module.exports = {
             await member.roles.remove(videogameschat).catch(e=>{})
 
             let ticketname = member.user.tag
-            let jailchannel = await message.guild.channels.create("jail-"+ticketname, {
+            let jailchannel = await interaction.guild.channels.create({
+                name: "jail-"+ticketname,
                 type: ChannelType.GuildText,
                 parent: parentId.jail,
                 topic: member.user.id,

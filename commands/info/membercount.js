@@ -2,9 +2,9 @@ const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('closeverify')
-		.setDescription('Closes the pending verification ticket'),
+		.setName('membercount')
+		.setDescription('Server members'),
 	async execute(interaction) {
-        // code goes here
+		await interaction.reply(`Pong! You have ${interaction.client.ws.ping} ms.`);
 	},
 };

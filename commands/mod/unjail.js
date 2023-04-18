@@ -1,7 +1,7 @@
 const { Collection, EmbedBuilder, AttachmentBuilder, SlashCommandBuilder, PermissionsBitField } = require('discord.js');
 const { textId, parentId, rolesId } = require('../../utils/variables')
-const permflag = PermissionsBitField.Flags
-const schema = require('../../model/jailsystem')
+const perm = PermissionsBitField.Flags
+const schema = require('../../model/jailsystem.js')
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -10,14 +10,30 @@ module.exports = {
         .addUserOption(option => option.setName('user').setDescription('User to be unjailed').setRequired(true)),
 	async execute(interaction) {
         const member = await interaction.options.get('user').member
-        if(!interaction.member.permissions.has(permflag.BanMembers || permflag.KickMembers)) return interaction.reply({
+        if(!interaction.member.permissions.has(perm.BanMembers || perm.KickMembers)) return interaction.reply({
             embeds: [new EmbedBuilder()
             .setDescription("❌ | You are not a staff member authorized to use this command.")
             .setColor("#ff0000")],
             ephemeral: true
         }) 
         if(interaction.channel.parent.id === parentId.jail) {
-            await interaction.reply(`\*\*${member.user.tag}\*\* has been unjailed`)
+            if(interaction.guild.member.has(member.user.id)) {
+                await interaction.reply(`\*\*${member.user.tag}\*\* has been unjailed.\n**The channel closes in five seconds.**`)
+                try {
+                    let data = await schema.findOne({ userId: member.user.id });
+                    await data.deleteOne({ userId: member.user.id });
+                } catch (error) {
+                    console.log(error);
+                }
+            } else {
+                await interaction.reply(`**The member is no longer available. Closing the channel.**`)
+                try {
+                    let data = await schema.findOne({ userId });
+                    if(data.userId !== member.user.id) return await data.deleteOne({ userId });
+                } catch (error) {
+                    console.log(error);
+                }
+            }
         } else return interaction.reply({
             embeds: [new EmbedBuilder()
             .setDescription("❌ | You are not allowed to execute outside the jail category.")

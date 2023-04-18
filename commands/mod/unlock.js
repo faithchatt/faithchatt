@@ -1,10 +1,14 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { } = require('../../utils/variables.js')
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('unlock')
 		.setDescription('Unlocks the text channel'),
 	async execute(interaction) {
-        // code goes here
+		await interaction.reply(`**Channel is now unlocked. Thank you for your patience.**`)
+        await interaction.channel.permissions.edit(interaction.guild.id, {
+			SendMessages: true
+		})
 	},
 };
