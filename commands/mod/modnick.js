@@ -1,5 +1,5 @@
 const { Collection, EmbedBuilder, AttachmentBuilder, SlashCommandBuilder, PermissionsBitField } = require('discord.js');
-const { textId, parentId, rolesId } = require('../../utils/variables')
+const { miscValues } = require('../../utils/variables')
 const permflag = PermissionsBitField.Flags
 const schema = require('../../model/jailsystem')
 
@@ -17,6 +17,18 @@ module.exports = {
             ephemeral: true
         })
 
-        // code goes here
+        var num1 = Math.floor(Math.random()*miscValues.nicknameSet.length);
+        var num2 = Math.floor(Math.random()*miscValues.nicknameSet.length);
+        try {
+            await member.setNickname(nicknameSet[num1]+nicknameSet[num2]);
+            await setTimeout(() => message.delete().catch(() => {}), 3000)
+            await interaction.reply({ embeds: [
+                new EmbedBuilder()
+                .setDescription(`✅ | **${targetmember.user.tag}**'s nickname has been generated and changed!`)
+                .setColor("#00ff00")
+            ]})
+        } catch (error) {
+            console.log(error)
+        }
 	},
 };

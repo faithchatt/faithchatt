@@ -17,16 +17,18 @@ module.exports = {
             ephemeral: true
         }) 
         if(interaction.channel.parent.id === parentId.jail) {
-            if(interaction.guild.member.has(member.user.id)) {
-                await interaction.reply(`\*\*${member.user.tag}\*\* has been unjailed.\n**The channel closes in five seconds.**`)
+            if(!member.user) {
+                await interaction.reply(`**The member is no longer available. Closing the channel.**`)
                 try {
-                    let data = await schema.findOne({ userId: member.user.id });
-                    await data.deleteOne({ userId: member.user.id });
+                    let data = await schema.findOne({ userId });
+                    if(data.userId !== member.user.id) return await data.deleteOne({ userId });
                 } catch (error) {
                     console.log(error);
                 }
+            } else if (member.user === interaction.user) {
+                await interaction.reply(`**You cannot unjail yourself.**`)
             } else {
-                await interaction.reply(`**The member is no longer available. Closing the channel.**`)
+                await interaction.reply(`\*\*${member.user.tag}\*\* has been unjailed.\n**The channel closes in five seconds.**`)
                 try {
                     let data = await schema.findOne({ userId });
                     if(data.userId !== member.user.id) return await data.deleteOne({ userId });
