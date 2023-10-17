@@ -1,7 +1,6 @@
-const { Collection, EmbedBuilder, AttachmentBuilder, SlashCommandBuilder, PermissionsBitField } = require('discord.js');
+const { EmbedBuilder, SlashCommandBuilder, PermissionsBitField } = require('discord.js');
 const { miscValues } = require('../../utils/variables')
 const permflag = PermissionsBitField.Flags
-const schema = require('../../model/jailsystem')
 
 module.exports = {
 	data: new SlashCommandBuilder()

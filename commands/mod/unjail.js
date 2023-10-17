@@ -20,7 +20,7 @@ module.exports = {
             if(!member.user) {
                 await interaction.reply(`**The member is no longer available. Closing the channel.**`)
                 try {
-                    let data = await schema.findOne({ userId });
+                    let data = await schema.findOne({ userId: member.user.id });
                     if(data.userId !== member.user.id) return await data.deleteOne({ userId });
                 } catch (error) {
                     console.log(error);
@@ -30,8 +30,8 @@ module.exports = {
             } else {
                 await interaction.reply(`\*\*${member.user.tag}\*\* has been unjailed.\n**The channel closes in five seconds.**`)
                 try {
-                    let data = await schema.findOne({ userId });
-                    if(data.userId !== member.user.id) return await data.deleteOne({ userId });
+                    let data = await schema.findOne({ userId: member.user.id });
+                    if(data.userId !== member.user.id) return await data.deleteOne({ userId: member.user.id });
                 } catch (error) {
                     console.log(error);
                 }
