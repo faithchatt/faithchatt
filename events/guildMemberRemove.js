@@ -1,7 +1,7 @@
 module.exports = {
-	once: false,
-	name: 'guildMemberRemove',
-	async execute(client) {
-		//
-	}
-}
+    once: false,
+    name: "guildMemberRemove",
+    async execute() {
+        //
+    },
+};
