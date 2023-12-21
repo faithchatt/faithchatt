@@ -52,19 +52,7 @@ module.exports = {
                         .setColor("#ff0000"),
                 ], ephemeral: true });
                 await member.roles.add(mutedrole).catch(err => console.error(err));
-                await member.roles.remove(unverified).catch(err => console.error(err));
-                await member.roles.remove(memberrole).catch(err => console.error(err));
-                await member.roles.remove(regularrole).catch(err => console.error(err));
-                await member.roles.remove(usherrole).catch(err => console.error(err));
-                await member.roles.remove(prayerwarrior).catch(err => console.error(err));
-                await member.roles.remove(fisherofmen).catch(err => console.error(err));
-                await member.roles.remove(malerole).catch(err => console.error(err));
-                await member.roles.remove(femalerole).catch(err => console.error(err));
-                await member.roles.remove(legalrole).catch(err => console.error(err));
-                await member.roles.remove(underagerole).catch(err => console.error(err));
-                await member.roles.remove(languagechat).catch(err => console.error(err));
-                await member.roles.remove(topicchat).catch(err => console.error(err));
-                await member.roles.remove(videogameschat).catch(err => console.error(err));
+                await member.roles.remove(unverified, memberrole, regularrole, usherrole, prayerwarrior, fisherofmen, malerole, femalerole, legalrole, underagerole, languagechat, topicchat, videogameschat).catch(err => console.error(err));
 
                 const ticketname = member.user.tag;
                 const jailchannel = await interaction.guild.channels.create({
