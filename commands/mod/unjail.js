@@ -9,7 +9,6 @@ module.exports = {
         .setDescription("Unjails a member")
         .addUserOption(option => option.setName("user").setDescription("User to be unjailed").setRequired(true)),
     async execute(interaction) {
-        const member = await interaction.options.get("user").member;
         if (!interaction.member.permissions.has(perm.BanMembers || perm.KickMembers)) {
             return interaction.reply({
                 embeds: [new EmbedBuilder()
@@ -18,29 +17,41 @@ module.exports = {
                 ephemeral: true,
             });
         }
+
+        async function userNoExist() {
+            await interaction.reply({ content: "❌ | This user does not exist.", ephemeral: true });
+        }
+
+        async function userNoData() {
+            await interaction.reply({ content: "❌ | This user has no data.", ephemeral: true });
+        }
+
+        async function channelNoExist() {
+            await interaction.reply({ content: "❌ | The corresponding channel does not exist.", ephemeral: true });
+        }
+
+        async function channelWrong() {
+            await interaction.reply({ content: "❌ | This user is not jailed in this specific channel.", ephemeral: true });
+        }
+
         if (interaction.channel.parent.id === parentId.jail) {
-            if (!member.user) {
-                await interaction.reply(`**The member is no longer available. Closing the channel.**`);
-                try {
-                    const data = await schema.findOne({ userId: member.user.id });
-                    if (data.userId !== member.user.id) return await data.deleteOne({ userId });
+            try {
+                const member = await interaction.options.get("user").member;
+                let userdata = await schema.findOne({ userId: member.user.id })
+                let userAvail = member.user.id == userdata.userId;
+                let channelAvail = interaction.channel.id == userdata.textChannel;
+
+                if(!userAvail) return userNoData();
+                if(!channelAvail) return channelNoExist();
+
+                if (!userAvail && channelAvail) userNoData();
+                else if (userAvail && !channelAvail) channelWrong();
+                else if (userAvail && channelAvail) {
+                    await interaction.reply({ content: "✅ | Successfully unjailed the user.", ephemeral: true });
+                    await userdata.deleteOne({ userId: member.user.id });
                 }
-                catch (error) {
-                    console.log(error);
-                }
-            }
-            else if (member.user === interaction.user) {
-                await interaction.reply(`**You cannot unjail yourself.**`);
-            }
-            else {
-                await interaction.reply(`**${member.user.tag}** has been unjailed.\n**The channel closes in five seconds.**`);
-                try {
-                    const data = await schema.findOne({ userId: member.user.id });
-                    if (data.userId !== member.user.id) return await data.deleteOne({ userId: member.user.id });
-                }
-                catch (error) {
-                    console.log(error);
-                }
+            } catch (e) {
+                await userNoExist();
             }
         }
         else {
