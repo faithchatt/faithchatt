@@ -1,6 +1,6 @@
 const { EmbedBuilder, SlashCommandBuilder, PermissionsBitField, ChannelType } = require("discord.js");
-const { textId, parentId, rolesId } = require("../../utils/variables");
-const schema = require("../../model/jailsystem.js");
+const { textId, parentId, rolesId, errorMessages } = require("../../utils/variables");
+const jailModel = require("../../model/jailsystem.js");
 const perm = PermissionsBitField.Flags;
 
 module.exports = {
@@ -9,98 +9,101 @@ module.exports = {
         .setDescription("Jails a member breaking the rules")
         .addUserOption(option => option.setName("user").setDescription("User to be jailed").setRequired(true))
         .addStringOption(option => option.setName("reason").setDescription("Reason for user to be jailed").setRequired(true)),
+    /**
+    * @param {import("discord.js").ChatInputCommandInteraction} interaction
+    * @returns
+    */
     async execute(interaction) {
         const member = await interaction.options.get("user").member;
         const reason = await interaction.options.get("reason").value;
-        const modperms = interaction.member.permissions.has(perm.BanMembers || perm.KickMembers);
-        if (!modperms) {
+
+        const modPerms = interaction.member.permissions.has(perm.BanMembers || perm.KickMembers);
+        if (!modPerms) {
             return interaction.reply({
                 embeds: [new EmbedBuilder()
-                    .setDescription("❌ | You are not a staff member authorized to use this command.")
+                    .setDescription(errorMessages.notAuthorized)
                     .setColor("#ff0000")],
                 ephemeral: true,
             });
         }
-        else {
-            const memberrole = interaction.guild.roles.cache.get(rolesId.member);
-            const regularrole = interaction.guild.roles.cache.get(rolesId.regular);
-            const usherrole = interaction.guild.roles.cache.get(rolesId.usher);
-            const prayerwarrior = interaction.guild.roles.cache.get(rolesId.prayerwarrior);
-            const fisherofmen = interaction.guild.roles.cache.get(rolesId.fisherofmen);
-            const languagechat = interaction.guild.roles.cache.get(rolesId.chatlanguage);
-            const topicchat = interaction.guild.roles.cache.get(rolesId.chattopics);
-            const videogameschat = interaction.guild.roles.cache.get(rolesId.chatvideogames);
 
-            const legalrole = interaction.guild.roles.cache.get(rolesId.legal);
-            const underagerole = interaction.guild.roles.cache.get(rolesId.underage);
-            const malerole = interaction.guild.roles.cache.get(rolesId.male);
-            const femalerole = interaction.guild.roles.cache.get(rolesId.female);
+        const memberRole = interaction.guild.roles.cache.get(rolesId.member);
 
-            const mutedrole = interaction.guild.roles.cache.get(rolesId.muted);
-            const unverified = interaction.guild.roles.cache.get(rolesId.unverified);
-            const everyone = interaction.guild.roles.cache.find(r => r.name === "@everyone");
-            const modlog = interaction.guild.channels.cache.get(textId.modLog);
+        const unverifiedRole = interaction.guild.roles.cache.get(rolesId.unverified);
+        const mutedRole = interaction.guild.roles.cache.get(rolesId.muted);
+        const moderatorRole = interaction.guild.roles.cache.get(rolesId.moderator);
+        const everyone = interaction.guild.roles.cache.find(r => r.name === "@everyone");
 
-            const moderatorrole = interaction.guild.roles.cache.get(rolesId.moderator);
+        const modLogChannel = interaction.guild.channels.cache.get(textId.modLog);
 
-            let data = await schema.findOne({ userId: member.user.id });
-            if (!data) {
-                await interaction.reply({ embeds: [
-                    new EmbedBuilder()
-                        .setDescription(`🔒 **${member.user.tag}** has been jailed!\nPlease wait as the channel is being set up.`)
-                        .setFooter({ text: `UID: ${member.user.id}` })
-                        .setColor("#ff0000"),
-                ], ephemeral: true });
-                await member.roles.add(mutedrole).catch(err => console.error(err));
-                await member.roles.remove(unverified, memberrole, regularrole, usherrole, prayerwarrior, fisherofmen, malerole, femalerole, legalrole, underagerole, languagechat, topicchat, videogameschat).catch(err => console.error(err));
+        // Get all roles from user except muted
+        const userRoles = member.roles.cache.filter(role => role.id !== mutedRole.id && role.id !== unverifiedRole.id);
 
-                const ticketname = member.user.tag;
-                const jailchannel = await interaction.guild.channels.create({
-                    name: "jail-" + ticketname,
-                    type: ChannelType.GuildText,
-                    parent: parentId.jail,
-                    topic: member.user.id,
-                    permissionOverwrites: [
-                        { id: member.user.id, allow: [perm.ViewChannel, perm.ReadMessageHistory, perm.SendMessages], deny: [perm.ManageChannels, perm.EmbedLinks, perm.AttachFiles, perm.CreatePublicThreads, perm.CreatePrivateThreads, perm.CreateInstantInvite, perm.SendMessagesInThreads, perm.ManageThreads, perm.ManageMessages, perm.UseExternalEmojis, perm.UseExternalStickers, perm.UseApplicationCommands, perm.ManageWebhooks, perm.ManageRoles, perm.SendTTSMessages] },
-                        { id: mutedrole.id, deny: [perm.EmbedLinks, perm.AttachFiles] },
-                        { id: memberrole.id, deny: [perm.ViewChannel] },
-                        { id: moderatorrole.id, allow: [perm.ViewChannel, perm.SendMessages, perm.ReadMessageHistory] },
-                        { id: everyone.id, deny: [perm.ViewChannel] },
-                    ],
-                });
-
-                data = await schema.create({
-                    userId: member.user.id,
-                    userName: member.user.tag,
-                    textChannel: jailchannel.id,
-                });
-
-                console.log(`🚨 Member has been jailed:\nMember: ${member.user.tag}\nReason: ${reason}`);
-                const channelembed = new EmbedBuilder()
-                    .setTitle("You have been jailed!")
-                    .setDescription(`👤 **User:** \`${member.user.tag}\`\n🔒 **Reason:** \`${reason}\`\n\nYou have been restricted access to all channels as of the moment. Leaving and rejoining the server to bypass the mute will result into a permanent sanction.`)
+        const jailData = await jailModel.findOne({ userId: member.user.id });
+        if (!jailData) {
+            await interaction.reply({ embeds: [
+                new EmbedBuilder()
+                    .setDescription(`🔒 **${member.user.tag}** has been jailed!\nPlease wait as the channel is being set up.`)
                     .setFooter({ text: `UID: ${member.user.id}` })
-                    .setColor("#ff0000");
-                await modlog.send({ embeds: [
+                    .setColor("#ff0000"),
+            ], ephemeral: true });
+
+            await member.roles.add(mutedRole).catch(err => console.error(err));
+            await member.roles.remove(userRoles).catch(err => console.error(err));
+
+            const ticketName = member.user.tag;
+            const jailChannel = await interaction.guild.channels.create({
+                name: "jail-" + ticketName,
+                type: ChannelType.GuildText,
+                parent: parentId.jail,
+                topic: member.user.id,
+                permissionOverwrites: [
+                    { id: member.user.id, allow: [perm.ViewChannel, perm.ReadMessageHistory, perm.SendMessages], deny: [perm.ManageChannels, perm.EmbedLinks, perm.AttachFiles, perm.CreatePublicThreads, perm.CreatePrivateThreads, perm.CreateInstantInvite, perm.SendMessagesInThreads, perm.ManageThreads, perm.ManageMessages, perm.UseExternalEmojis, perm.UseExternalStickers, perm.UseApplicationCommands, perm.ManageWebhooks, perm.ManageRoles, perm.SendTTSMessages] },
+                    { id: mutedRole.id, deny: [perm.EmbedLinks, perm.AttachFiles] },
+                    { id: memberRole.id, deny: [perm.ViewChannel] },
+                    { id: moderatorRole.id, allow: [perm.ViewChannel, perm.SendMessages, perm.ReadMessageHistory] },
+                    { id: everyone.id, deny: [perm.ViewChannel] },
+                ],
+            });
+
+            const newJailData = await jailModel.create({
+                userId: member.user.id,
+                userName: member.user.tag,
+                textChannel: jailChannel.id,
+            });
+            newJailData.save();
+
+            console.log(`🚨 Member has been jailed:\nMember: ${member.user.tag}\nReason: ${reason}`);
+            const channelEmbed = new EmbedBuilder()
+                .setTitle("You have been jailed!")
+                .setDescription(`👤 **User:** \`${member.user.tag}\`\n🔒 **Reason:** \`${reason}\`\n\nYou have been restricted access to all channels as of the moment. Leaving and rejoining the server to bypass the mute will result into a permanent sanction.`)
+                .setFooter({ text: `UID: ${member.user.id}` })
+                .setColor("#ff0000");
+
+            try {
+                await modLogChannel.send({ embeds: [
                     new EmbedBuilder()
                         .setDescription(`👤 **User:** \`${member.user.tag}\`\n\`${member.user.id}\`\n🔒 **Reason:** \`${reason}\`\n\n👮‍♂️ **Moderator**: \`${interaction.user.tag}\``)
                         .setFooter({ text: `Moderator UID: ${interaction.user.id}` })
                         .setColor("#ff0000"),
                 ] });
-                data.save();
-                member.send({ embeds: [
+
+                await member.send({ embeds: [
                     new EmbedBuilder()
                         .setTitle("You have been jailed!")
-                        .setDescription(`👤 **User:** \`${member.user.tag}\`\n🔒 **Reason:** \`${reason}\`\n\nYou have been restricted access to all channels as of the moment. Leaving and rejoining the server to bypass the mute will result into a permanent sanction. ${jailchannel}`)
+                        .setDescription(`👤 **User:** \`${member.user.tag}\`\n🔒 **Reason:** \`${reason}\`\n\nYou have been restricted access to all channels as of the moment. Leaving and rejoining the server to bypass the mute will result into a permanent sanction. ${jailChannel}`)
                         .setFooter({ text: `UID: ${member.user.id}` })
                         .setColor("#ff0000"),
-                ] }).catch(err => console.error(err));
-                await jailchannel.send({ content: `${member}`, embeds: [channelembed] }).catch(err => console.error(err));
-                await jailchannel.send({ content: `${interaction.user}` }).then(msg => {
+                ] });
+
+                await jailChannel.send({ content: `${member}`, embeds: [channelEmbed] }).catch(err => console.error(err));
+                await jailChannel.send({ content: `${interaction.user}` }).then(msg => {
                     setTimeout(() => msg.delete().catch(err => console.error(err)), 3000);
                 });
             }
+            catch (err) {
+                console.error(err);
+            }
         }
-
     },
 };
