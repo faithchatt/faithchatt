@@ -1,15 +1,13 @@
-const { EmbedBuilder, SlashCommandBuilder, PermissionsBitField } = require("discord.js");
-const { parentId, errorMessages } = require("../../utils/variables");
+const { SlashCommandBuilder, PermissionsBitField } = require("discord.js");
+const { parentId, errorMessages, rolesId } = require("../../utils/variables");
+const jailModel = require("../../model/jailsystem.js");
+const embedFactory = require("../../utils/embedFactory.js");
 const perm = PermissionsBitField.Flags;
-const jailSchema = require("../../model/jailsystem.js");
 
 /**
 * @param {CommandInteraction} interaction
 * @param {string | import("discord.js").InteractionReplyOptions | import("discord.js").MessagePayload} messageContent
 */
-function ephemeralReply(interaction, messageContent) {
-    return interaction.reply({ content: messageContent, ephemeral: true });
-}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -21,11 +19,12 @@ module.exports = {
     * @param {import("discord.js").CommandInteraction} interaction
     */
     async execute(interaction) {
-        if (!interaction.member.permissions.has(perm.BanMembers || perm.KickMembers)) {
+        const modPerms = interaction.member.permissions.has(perm.BanMembers || perm.KickMembers);
+        if (!modPerms) {
             return interaction.reply({
-                embeds: [new EmbedBuilder()
-                    .setDescription(errorMessages.notAuthorized)
-                    .setColor("#ff0000")],
+                embeds: [
+                    embedFactory.createErrorEmbed(errorMessages.notAuthorized),
+                ],
                 ephemeral: true,
             });
         }
@@ -33,26 +32,51 @@ module.exports = {
         if (interaction.channel.parent.id === parentId.jail) {
             try {
                 const jailedMember = await interaction.options.get("user").member;
-                const jailedUserData = await jailSchema.findOne({ userId: jailedMember.user.id });
-                const userAvail = jailedMember.user.id == jailedUserData.userId;
-                const channelAvail = interaction.channel.id == jailedUserData.textChannel;
+                const jailedUserData = await jailModel.findOne({ userId: jailedMember.user.id });
 
-                if (!userAvail) return ephemeralReply(interaction, errorMessages.userNoData);
-                if (!channelAvail) return ephemeralReply(interaction, errorMessages.channelNotExist);
+                if (!jailedUserData) {
+                    return interaction.reply({
+                        embeds: [
+                            embedFactory.createErrorEmbed(errorMessages.userNoData),
+                        ],
+                        ephemeral: true,
+                    });
+                }
+                if (interaction.channel.id != jailedUserData.textChannel) {
+                    return interaction.reply({
+                        embeds: [
+                            embedFactory.createErrorEmbed(errorMessages.channelNotExist),
+                        ],
+                        ephemeral: true,
+                    });
+                }
 
-                await ephemeralReply(interaction, "✅ | Successfully unjailed the user.");
-                await jailedUserData.deleteOne({ userId: jailedMember.user.id });
+                const mutedRole = interaction.guild.roles.cache.get(rolesId.muted);
+                jailedMember.roles.remove(mutedRole);
+
+                await interaction.reply({
+                    embeds: [
+                        embedFactory.createSuccessEmbed("✅ | Successfully unjailed the user."),
+                    ],
+                    ephemeral: true,
+                });
+                await jailModel.deleteOne({ userId: jailedMember.user.id });
             }
             catch (err) {
                 console.error(err);
-                await ephemeralReply(interaction, errorMessages.userNotExist);
+                await interaction.reply({
+                    embeds: [
+                        embedFactory.createErrorEmbed(errorMessages.userNotExist),
+                    ],
+                    ephemeral: true,
+                });
             }
         }
         else {
             return interaction.reply({
-                embeds: [new EmbedBuilder()
-                    .setDescription(errorMessages.notAllowedOutsideJail)
-                    .setColor("#ff0000")],
+                embeds: [
+                    embedFactory.createErrorEmbed(errorMessages.notAllowedOutsideJail),
+                ],
                 ephemeral: true,
             });
         }

@@ -1,7 +1,8 @@
-const { SlashCommandBuilder, PermissionsBitField, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, PermissionsBitField } = require("discord.js");
 const { parentId, errorMessages } = require("../../utils/variables");
-const perm = PermissionsBitField.Flags;
 const jailModel = require("../../model/jailsystem.js");
+const embedFactory = require("../../utils/embedFactory.js");
+const perm = PermissionsBitField.Flags;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,35 +12,45 @@ module.exports = {
     * @param {import("discord.js").CommandInteraction} interaction
     */
     async execute(interaction) {
-        if (!interaction.member.permissions.has(perm.BanMembers || perm.KickMembers)) {
+        const modPerms = interaction.member.permissions.has(perm.BanMembers || perm.KickMembers);
+        if (!modPerms) {
             return interaction.reply({
-                embeds: [new EmbedBuilder()
-                    .setDescription(errorMessages.notAuthorized)
-                    .setColor("#ff0000")],
+                embeds: [
+                    embedFactory.createErrorEmbed(errorMessages.notAuthorized),
+                ],
                 ephemeral: true,
             });
         }
 
         // If we are in the jail category
         if (interaction.channel.parent.id === parentId.jail) {
-            await interaction.reply(`**The channel closes in five seconds.**`);
             try {
                 const jailData = await jailModel.findOne({ "textChannel": interaction.channel.id });
-                await jailData.deleteOne({ "textChannel": interaction.channel.id });
+                if (jailData) {
+                    await jailModel.deleteOne({ "textChannel": interaction.channel.id });
+                }
             }
             catch (err) {
                 console.log(err);
+                return interaction.followUp({
+                    embeds: [
+                        embedFactory.createErrorEmbed(errorMessages.internalError),
+                    ],
+                    ephemeral: true,
+                });
             }
-            // reserve the five second timeout then delete
+
+            await interaction.reply(`**The channel closes in five seconds.**`).catch(err => console.log(err));
+            // Reserve the five second timeout then delete
             setTimeout(() => {
                 interaction.channel.delete(`Jail closed by ${interaction.member.nickname} (${interaction.member.user.id}).`);
             }, 5000);
         }
         else {
             return interaction.reply({
-                embeds: [new EmbedBuilder()
-                    .setDescription(errorMessages.notAllowedOutsideJail)
-                    .setColor("#ff0000")],
+                embeds: [
+                    embedFactory.createErrorEmbed(errorMessages.notAllowedOutsideJail),
+                ],
                 ephemeral: true,
             });
         }

@@ -1,7 +1,7 @@
-const { Client } = require("discord.js");
+const { Client, GatewayIntentBits, Partials } = require("discord.js");
 
-const intentsLoad = ["DirectMessages", "Guilds", "GuildEmojisAndStickers", "GuildIntegrations", "GuildMessages", "GuildPresences", "GuildVoiceStates", "MessageContent"];
-const partialsLoad = ["User", "Channel", "GuildMember", "Message", "Reaction", "ThreadMember"];
+const intentsLoad = [GatewayIntentBits.DirectMessages, GatewayIntentBits.Guilds, GatewayIntentBits.GuildEmojisAndStickers, GatewayIntentBits.GuildIntegrations, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildPresences, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers];
+const partialsLoad = [Partials.User, Partials.Channel, Partials.GuildMember, Partials.Message, Partials.Reaction, Partials.ThreadMember];
 
 const client = new Client({ intents: intentsLoad, partials: partialsLoad });
 module.exports.client = client;
