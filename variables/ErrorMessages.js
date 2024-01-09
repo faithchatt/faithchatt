@@ -5,4 +5,5 @@ module.exports = {
     channelNotExist: "❌ | The corresponding channel does not exist.",
     channelWrong: "❌ | This user is not jailed in this specific channel.",
     notAllowedOutsideJail: "❌ | You are not allowed to execute outside the jail category.",
+    internalError: "❌ | An internal error has occurred.",
 };
