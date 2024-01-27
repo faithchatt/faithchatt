@@ -1,10 +1,14 @@
-const { ActionRowBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
+const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
 const configschema = require("../../model/botconfig.js");
+const embedFactory = require("../../utils/embedFactory.js");
 
 module.exports = {
     data: {
         name: "verifyStart",
     },
+    /**
+     * @param {import("discord.js").ButtonInteraction} interaction
+     */
     async execute(interaction) {
         {
             const modal = new ModalBuilder()
@@ -41,6 +45,7 @@ module.exports = {
                 .setPlaceholder("Have you been on FaithChatt Forum in the past?")
                 .setRequired(true)
                 .setStyle(TextInputStyle.Short);
+
             const row1 = new ActionRowBuilder().addComponents(component);
             const row2 = new ActionRowBuilder().addComponents(component2);
             const row3 = new ActionRowBuilder().addComponents(component3);
@@ -48,29 +53,25 @@ module.exports = {
             const row5 = new ActionRowBuilder().addComponents(component5);
             modal.addComponents(row1, row2, row3, row4, row5);
 
-            let configdata = await configschema.findOne({ guildId: interaction.guild.id });
+            let configData = await configschema.findOne({ guildId: interaction.guild.id });
 
-            if (!configdata) configdata = await configschema.create({ guildId: interaction.guild.id });
-            if (configdata.verifyLock === true) {
+            if (!configData) configData = await configschema.create({ guildId: interaction.guild.id });
+            if (configData.verifyLock === true) {
                 return interaction.reply({
                     embeds: [
-                        new EmbedBuilder()
-                            .setTitle("Verification is currently locked.")
-                            .setDescription("Due to the unexpected circumstances happening in our server, the verification channel is locked until further notice. Please contact a staff member for questions and details.")
-                            .setFooter({ text: "© FaithChatt Forum" })
-                            .setColor("#ff0000"),
+                        embedFactory.createVerificationEmbed(embedFactory.VerificationEmbedType.VerificationLocked, null),
                     ],
                     ephemeral: true,
                 });
             }
-            else if (configdata.verifyLock === false) {
+            else if (configData.verifyLock === false) {
                 await interaction.showModal(modal);
             }
             else {
                 // Only works IF the verification channel is set up for the first time
-                configdata.verifyLock = false;
-                configdata.verifyAutoClose = true;
-                configdata.save();
+                configData.verifyLock = false;
+                configData.verifyAutoClose = true;
+                configData.save();
                 await interaction.showModal(modal);
             }
         }

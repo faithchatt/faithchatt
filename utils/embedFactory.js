@@ -1,5 +1,6 @@
-const { EmbedBuilder } = require("discord.js");
 const dedent = require("dedent");
+const { EmbedBuilder } = require("discord.js");
+const { textId } = require("../utils/variables");
 
 const JailEmbedType = {
     JailBeingSetup: 1,
@@ -10,8 +11,18 @@ const JailEmbedType = {
     JailedUserLeft: 6,
     JailedUserRejoined: 7,
 };
+const VerificationEmbedType = {
+    UserDenied: 1,
+    UserVerified: 2,
+    UserDeniedLog: 3,
+    UserVerifiedLog: 4,
+    UserAlreadyVerified: 5,
+    ForceClosedLog: 6,
+    VerificationLocked: 7,
+};
 
 exports.JailEmbedType = JailEmbedType;
+exports.VerificationEmbedType = VerificationEmbedType;
 /**
  * @param {JailEmbedType} embedType
  * @param {import("discord.js").User} staffUser
@@ -102,6 +113,85 @@ exports.createJailEmbed = (embedType, staffUser, jailedMember, reason, jailChann
             .setFooter({ text: `UID: ${jailedMember.user.id}` })
             .setColor("#ff0000");
 
+    }
+};
+
+exports.createVerificationEmbed = (embedType, targetMember) => {
+    switch (embedType) {
+    case VerificationEmbedType.UserDenied:
+        return new EmbedBuilder()
+            .setColor("#ff0000")
+            .setTitle("Sorry, but you're ineligible to be verified at this point. Please try again later.")
+            .setDescription("The reasons are among the following:\n- Answers remain unclear after several additional questions are supplemented by the staff team.\n- Using of alts are unauthorized without approval of the staff\n- Un-Christlike behavior as reflected by violating the server rules\n\nIf you have any questions or concerns not mentioned above, please contact us admins/moderators. Thank you for joining FaithChatt Forum.")
+            .setFooter({ text: "©️ FaithChatt Forum" });
+    case VerificationEmbedType.UserVerified:
+        return new EmbedBuilder()
+            .setColor("#ffd100")
+            .setTitle(`Welcome to FaithChatt!`)
+            .setDescription(
+                dedent(
+                    `Be sure to check out our <#${textId.roles}> and review our <#${textId.confidentiality}> as you begin working with us. It gives you access to specific channels, a new color, and important reminders pings.
+                    
+                    You may also want to review our <#${textId.introduction}> and share a little bit about yourself. We make it easy and even provide a template to follow. Thanks for joining.`,
+                ),
+            )
+            .setThumbnail(targetMember.user.displayAvatarURL({ dynamic: true }))
+            .setFooter({ text: `UID: ${targetMember.user.id}` })
+            .setTimestamp();
+    case VerificationEmbedType.UserDeniedLog:
+        return new EmbedBuilder()
+            .setColor("#ff0000")
+            .setDescription(
+                dedent(
+                    `👤 **User:** \`${targetMember.user.tag}\`
+                    📜 **ID:** \`${targetMember.user.id}\`
+                    
+                    Unverified member was disqualified during vetting.`,
+                ),
+            )
+            .setThumbnail(targetMember.displayAvatarURL());
+    case VerificationEmbedType.UserVerifiedLog:
+        return new EmbedBuilder()
+            .setColor("#00FF00")
+            .setDescription(
+                dedent(
+                    `👤 **User:** \`${targetMember.user.tag}\`
+                    📜 **ID:** \`${targetMember.user.id}\`
+                    
+                    Verification successful.`,
+                ),
+            )
+            .setThumbnail(targetMember.displayAvatarURL());
+    case VerificationEmbedType.UserAlreadyVerified:
+        return new EmbedBuilder()
+            .setColor("#00FF00")
+            .setDescription(
+                dedent(
+                    `👤 **User:** \`${targetMember.user.tag}\`
+                    📜 **ID:** \`${targetMember.user.id}\`\
+                    
+                    Member was already verified. The bot was experiencing errors then the staff initially added the role for him/her.`,
+                ),
+            )
+            .setThumbnail(targetMember.displayAvatarURL());
+    case VerificationEmbedType.ForceClosedLog:
+        return new EmbedBuilder()
+            .setColor("#ff0000")
+            .setDescription(
+                dedent(
+                    `👤 **User:** \`${targetMember.user.tag}\`
+                    📜 **ID:** \`${targetMember.user.id}\`
+                    
+                    An admin has force closed the ticket.`,
+                ),
+            )
+            .setThumbnail(targetMember.displayAvatarURL());
+    case VerificationEmbedType.VerificationLocked:
+        return new EmbedBuilder()
+            .setTitle("Verification is currently locked.")
+            .setDescription("Due to the unexpected circumstances happening in our server, the verification channel is locked until further notice. Please contact a staff member for questions and details.")
+            .setFooter({ text: "© FaithChatt Forum" })
+            .setColor("#ff0000");
     }
 };
 
