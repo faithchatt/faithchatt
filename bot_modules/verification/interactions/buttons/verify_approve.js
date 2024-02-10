@@ -1,24 +1,20 @@
 const { EmbedBuilder, PermissionsBitField } = require("discord.js");
-const ticketModel = require("../../model/ticket.js");
-const embedFactory = require("../../utils/embedFactory.js");
-const verificationSystem = require("../../utils/verificationSystem.js");
+const { rolesId, textId } = require("../../../..//utils/variables");
+const ticketModel = require("../../../../model/ticket.js");
+const embedFactory = require("../../../../utils/embedFactory.js");
+const verificationSystem = require("../../utils/verification_system.js");
 
 /**
- * Denies a verification ticket.
+ * Approves a verification ticket.
  *
  * @param {import("discord.js").ButtonInteraction} interaction - The interaction object.
  * @param {import("discord.js").GuildMember} targetMember - The target member.
  * @param {ticketModel} ticketData - The ticket data.
  * @return {Promise<void>} Returns nothing.
  */
-async function verifyDenyTicket(interaction, targetMember, ticketData) {
+async function verifySuccess(interaction, targetMember, ticketData) {
     await interaction.deferUpdate();
-    await targetMember.send({
-        embeds: [
-            embedFactory.createVerificationEmbed(embedFactory.VerificationEmbedType.UserDenied, targetMember),
-        ],
-    });
-    await interaction.channel.send({ content: `**Verification ticket closes in five seconds.**` });
+    await interaction.channel.send({ content: `${targetMember} is now verified!\n**The channel will be closed in five seconds.**` });
     try {
         await ticketModel.findOne({ userId: targetMember.user.id }).then(async () => {
             await ticketData.deleteOne({ userId: targetMember.user.id });
@@ -27,12 +23,21 @@ async function verifyDenyTicket(interaction, targetMember, ticketData) {
     catch (error) {
         console.log(error);
     }
-    setTimeout(async () => interaction.channel.delete(), 5000);
+
+    const memberRole = interaction.guild.roles.cache.get(rolesId.member);
+    const unverified = interaction.guild.roles.cache.get(rolesId.unverified);
+    setTimeout(async () => {
+        targetMember.roles.remove(unverified).catch(err => console.error(err));
+        targetMember.roles.add(memberRole).catch(err => console.error(err));
+        const welcomeEmbed = embedFactory.createVerificationEmbed(embedFactory.VerificationEmbedType.UserVerified, targetMember);
+        interaction.client.channels.cache.get(textId.general).send({ content: `${targetMember} has arrived!`, embeds: [welcomeEmbed] }).catch(err => console.error(err));
+        interaction.channel.delete();
+    }, 5000);
 }
 
 module.exports = {
     data: {
-        name: "verifyDeny",
+        name: "verifyApprove",
     },
     /**
      * @param {import("discord.js").ButtonInteraction} interaction
@@ -63,8 +68,13 @@ module.exports = {
         if (!interaction.member.permissions.has(staffPerms)) return interaction.reply({ embeds: [notStaffEmbed], ephemeral: true });
 
         try {
-            await verificationSystem.logAction(interaction, targetMember, embedFactory.VerificationEmbedType.UserDeniedLog);
-            await verifyDenyTicket(interaction, targetMember, ticketData);
+            const alreadyVerified = targetMember.roles.cache.has(rolesId.member);
+            await verificationSystem.logAction(
+                interaction,
+                targetMember,
+                alreadyVerified ? embedFactory.VerificationEmbedType.UserAlreadyVerified : embedFactory.VerificationEmbedType.UserVerifiedLog,
+            );
+            await verifySuccess(interaction, targetMember, ticketData);
         }
         catch (error) {
             console.error(error);

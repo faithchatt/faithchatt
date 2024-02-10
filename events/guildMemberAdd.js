@@ -1,5 +1,4 @@
 const { PermissionsBitField } = require("discord.js");
-const { rolesId } = require("../utils/variables");
 const jailModel = require("../model/jailsystem.js");
 const jailSystem = require("../utils/jailSystem.js");
 const embedFactory = require("../utils/embedFactory.js");
@@ -10,9 +9,6 @@ module.exports = {
     name: "guildMemberAdd",
     async execute(member) {
         console.log(member.user.username + " joined the server");
-        // Give unverified role
-        const unverifiedRole = member.guild.roles.cache.get(rolesId.unverified);
-        member.roles.add(unverifiedRole).catch(console.error);
 
         const jailData = await jailModel.findOne({ userId: member.user.id });
 

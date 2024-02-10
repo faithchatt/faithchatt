@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require("discord.js");
-const configschema = require("../../model/botconfig.js");
-const embedFactory = require("../../utils/embedFactory.js");
+const configModel = require("../../../../model/botconfig.js");
+const embedFactory = require("../../../../utils/embedFactory.js");
 
 module.exports = {
     data: {
@@ -53,9 +53,9 @@ module.exports = {
             const row5 = new ActionRowBuilder().addComponents(component5);
             modal.addComponents(row1, row2, row3, row4, row5);
 
-            let configData = await configschema.findOne({ guildId: interaction.guild.id });
+            let configData = await configModel.findOne({ guildId: interaction.guild.id });
 
-            if (!configData) configData = await configschema.create({ guildId: interaction.guild.id });
+            if (!configData) configData = await configModel.create({ guildId: interaction.guild.id });
             if (configData.verifyLock === true) {
                 return interaction.reply({
                     embeds: [
