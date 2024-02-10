@@ -1,5 +1,5 @@
 const { PermissionsBitField, ChannelType } = require("discord.js");
-const { parentId, rolesId } = require("./variables");
+const { parentId, rolesId } = require("../../../utils/variables");
 const perm = PermissionsBitField.Flags;
 
 const jailSystem = {
