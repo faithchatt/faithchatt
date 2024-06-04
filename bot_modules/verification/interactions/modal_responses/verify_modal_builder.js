@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, EmbedBuilder, PermissionsBitField } = require("discord.js");
-const faithchatt = require("../../utils/variables");
-const ticketModel = require("../../model/ticket.js");
+const faithchatt = require("../../../../utils/variables.js");
+const ticketModel = require("../../../../model/ticket.js");
 const perms = PermissionsBitField.Flags;
 
 module.exports = {

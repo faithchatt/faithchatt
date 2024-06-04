@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, PermissionsBitField, RESTJSONErrorCodes } = require("discord.js");
-const { textId, rolesId, errorMessages } = require("../../utils/variables");
-const jailModel = require("../../model/jailsystem.js");
-const embedFactory = require("../../utils/embedFactory.js");
-const jailSystem = require("../../utils/jailSystem.js");
+const { textId, rolesId, errorMessages } = require("../../../../utils/variables.js");
+const jailModel = require("../../models/jailsystem.js");
+const embedFactory = require("../../../../utils/embedFactory.js");
+const jailSystem = require("../../utils/jail_system.js");
 const perm = PermissionsBitField.Flags;
 
 module.exports = {

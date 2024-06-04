@@ -11,7 +11,7 @@ async function loadCommands(client) {
             { body: client.commandsArray },
         );
         console.log("Successfully reloaded application (/) commands.");
-        console.clear();
+
         const logo = ` _____     _ _   _   _____ _       _   _   
 |   __|___|_| |_| |_|     | |_ ___| |_| |_ 
 |   __| .'| |  _|   |   --|   | .'|  _|  _|

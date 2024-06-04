@@ -6,7 +6,7 @@ const path = require("path");
  * @param {Path} dir Directory for grabbing files
  * @param {Array} fileTypes List of file extentions to look for
  * @param {RegExp} ignore Files to ignore
- * @returns Array
+ * @returns {string[]} Array of file paths
  */
 module.exports = (dir, fileTypes = [".js"], ignore = new RegExp("^-")) => {
     const filesToReturn = [];

@@ -1,7 +1,7 @@
 const moment = require("moment");
 const { Collection, AttachmentBuilder } = require("discord.js");
-const { textId } = require("./variables");
-const embedFactory = require("./embedFactory.js");
+const { textId } = require("../../../utils/variables.js");
+const embedFactory = require("../../../utils/embedFactory.js");
 
 const verificationSystem = {
     /**
