@@ -1,0 +1,17 @@
+services:
+  discord-bot:
+    image: faithchatt/discord-bot
+    build: .
+    ports:
+      - 80:3123
+    develop:
+      watch:
+        - action: sync+restart
+          path: .
+          target: /bot
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: Dockerfile
